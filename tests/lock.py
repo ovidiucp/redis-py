@@ -1,8 +1,10 @@
 from __future__ import with_statement
-import redis
 import time
 import unittest
+
 from redis.client import Lock, LockError
+import redis
+
 
 class LockTestCase(unittest.TestCase):
     def setUp(self):
@@ -15,7 +17,7 @@ class LockTestCase(unittest.TestCase):
     def test_lock(self):
         lock = self.client.lock('foo')
         self.assert_(lock.acquire())
-        self.assertEquals(self.client['foo'], str(Lock.LOCK_FOREVER))
+        self.assertEquals(self.client['foo'], str(Lock.LOCK_FOREVER).encode())
         lock.release()
         self.assertEquals(self.client.get('foo'), None)
 
@@ -36,7 +38,7 @@ class LockTestCase(unittest.TestCase):
         self.assertEquals(lock1.acquired_until, float(int(time.time())) + 1)
         self.assertEquals(lock1.acquired_until, float(self.client['foo']))
         self.assertFalse(lock2.acquire(blocking=False))
-        time.sleep(2) # need to wait up to 2 seconds for lock to timeout
+        time.sleep(2)  # need to wait up to 2 seconds for lock to timeout
         self.assert_(lock2.acquire(blocking=False))
         lock2.release()
 
@@ -49,7 +51,9 @@ class LockTestCase(unittest.TestCase):
 
     def test_context_manager(self):
         with self.client.lock('foo'):
-            self.assertEquals(self.client['foo'], str(Lock.LOCK_FOREVER))
+            self.assertEquals(
+                self.client['foo'],
+                str(Lock.LOCK_FOREVER).encode())
         self.assertEquals(self.client.get('foo'), None)
 
     def test_float_timeout(self):
@@ -64,4 +68,4 @@ class LockTestCase(unittest.TestCase):
         self.assertRaises(
             LockError,
             self.client.lock, 'foo', timeout=1, sleep=2
-            )
+        )
