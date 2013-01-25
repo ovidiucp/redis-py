@@ -1503,13 +1503,6 @@ class PubSub(object):
         try:
             connection.send_command(*args)
         except ConnectionError:
-            # We got a connection error. Try to reconnect, but only up
-            # to one more time
-            if self.tries_to_reconnect:
-                self.tries_to_reconnect = False
-                connection.disconnect()
-                return None
-            self.tries_to_reconnect = True
             connection.disconnect()
             # Connect manually here. If the Redis server is down, this will
             # fail and raise a ConnectionError as desired.
